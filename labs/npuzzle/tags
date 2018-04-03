@@ -1,0 +1,20 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+NPuzzle	NPuzzle.py	/^class NPuzzle:$/;"	c
+__init__	NPuzzle.py	/^    def __init__(self,size):$/;"	m	class:NPuzzle
+board	solvability.py	/^    board = [7, 1, 2, 5, None, 9, 8, 3, 6]$/;"	v
+inverion_count	solvability.py	/^def inverion_count(board, dimension):$/;"	f
+is_solvable	solvability.py	/^def is_solvable(npuzzle):$/;"	f
+n	solvability.py	/^    n = inverion_count(board, 3)$/;"	v
+npuzzle	main.py	/^import npuzzle$/;"	i
+npuzzle	solvability.py	/^import npuzzle$/;"	i
+p	main.py	/^p = npuzzle.NPuzzle(3)$/;"	v
+random	NPuzzle.py	/^import random$/;"	i
+read_tile	NPuzzle.py	/^    def read_tile(self, row, col):$/;"	m	class:NPuzzle
+reset	NPuzzle.py	/^    def reset(self):$/;"	m	class:NPuzzle
+tile	main.py	/^tile = p.read_tile(1, 2)$/;"	v
+visualise	NPuzzle.py	/^    def visualise(self):$/;"	m	class:NPuzzle
