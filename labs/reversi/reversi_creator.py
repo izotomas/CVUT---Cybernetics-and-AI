@@ -1,8 +1,8 @@
 import player
 import random_player
-#import greedy_player
-#import alphabeta_player
-#import heuristic_player
+# import greedy_player
+# import alphabeta_player
+# import heuristic_player
 
 from game_board import GameBoard
 from reversi_view import ReversiView
@@ -34,7 +34,7 @@ class ReversiCreator(object):
         self.clear_game()
         self.paused = False
         print('gui created')
-        
+
     def clear_game(self):
         """
         Sets the game state to the initial value.
@@ -64,7 +64,7 @@ class ReversiCreator(object):
         move = self.current_player.move(self.board.get_board_copy())
         end_time = time.time()
         move_time = (end_time - start_time) * 1000
-        q.put({'time':move_time, 'move':move})
+        q.put({'time': move_time, 'move': move})
 
     def play_game(self, interactive_player_color=-1):
         """
@@ -77,7 +77,7 @@ class ReversiCreator(object):
         self.paused = False
         wrong_move = False
 
-        while self.board.can_play( self.current_player_color) and not self.paused:
+        while self.board.can_play(self.current_player_color) and not self.paused:
             if interactive_player_color == self.current_player_color:
                 inform_str = 'It is your turn'
                 self.gui.inform(inform_str, 'green')
@@ -87,16 +87,16 @@ class ReversiCreator(object):
             move = self.current_player.move(self.board.get_board_copy())
             end_time = time.time()
             move_time = (end_time - start_time) * 1000
-            
+
             if move_time > 1000:
                 print("running too long - killing it")
                 player_move_overtime = self.current_player_color
-            
+
             if player_move_overtime != -1:
                 inform_str = 'Player %d move took to long - killed' % (self.current_player_color)
                 self.gui.inform(inform_str, 'red')
                 break
-            
+
             self.max_times_ms[self.current_player_color] = max(self.max_times_ms[self.current_player_color], move_time)
             if move is None:
                 print('Move is not correct!!!!')
@@ -126,7 +126,7 @@ class ReversiCreator(object):
                 self.gui.wrong_move = True
                 wrong_move = True
                 break
-                
+
             self.gui.print_board_state()
             self.gui.print_score()
             self.gui.print_move_max_times(self.max_times_ms)
@@ -138,9 +138,9 @@ class ReversiCreator(object):
             self.change_player()
             next_player_id = current_player_oponent_color
 
-        if next_player_id == -1 and not self.paused and not wrong_move :
+        if next_player_id == -1 and not self.paused and not wrong_move:
             self.print_final_info()
-        
+
     def play_move(self, move):
         """
         Play move for current player.
@@ -152,7 +152,7 @@ class ReversiCreator(object):
             inform_str = 'No possible move for Player %d' % (self.current_player_color)
             self.gui.inform(inform_str, 'red')
             self.change_player()
-            if self.board.can_play( self.current_player_color):
+            if self.board.can_play(self.current_player_color):
                 inform_str = 'Player %d plays again ' % (self.current_player_color)
                 self.gui.inform(inform_str, 'black')
             else:
@@ -183,8 +183,8 @@ class ReversiCreator(object):
         Prints the info after game is finished.
         """
         print('print_final_info')
-        stones = self.board.get_score()  
-        self.gui.print_num_stones(stones) 
+        stones = self.board.get_score()
+        self.gui.print_num_stones(stones)
         self.gui.print_move_max_times(self.max_times_ms)
         final_score = 'Final score:\tPlayer%d:Player%d\t[%d:%d]' % (self.player1_color,
                                                                     self.player2_color,
@@ -200,7 +200,7 @@ class ReversiCreator(object):
         self.gui.inform([final_score, who_wins], 'green')
 
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
     (choices, args) = getopt.getopt(sys.argv[1:], "")
     players_dict = {'random': random_player.MyPlayer, 'izotomas': player.MyPlayer}
     # players_dict = {'random':random_player.MyPlayer,'greedy':greedy_player.MyPlayer,'alphabeta':alphabeta_player.MyPlayer,'heuristic':heuristic_player.MyPlayer}

@@ -1,63 +1,102 @@
+from node import Node
+import reversiutils
+import time
 
 
 class MyPlayer(object):
     """
-    Docstring for MyPlayer
+    Uses alfa-beta pruning, and heuristic function based on sum of field evaluation if tree lookup takes longer than
+    max allowed waiting time
     """
+
+    MAX_WAITING_TIME = 0.85
+    # heuristics weights
+    """SQUARE_WEIGHTS = [
+        [99, -8, 8, 6, 6, 8, -8, 99],
+        [-8, -24, -4, -3, -3, -4, -24, -8],
+        [8, -4, 7, 4, 4, 7, -4, 8],
+        [6, -3, 4, 0, 0, 4, -3, 6],
+        [6, -3, 4, 0, 0, 4, -3, 6],
+        [8, -4, 7, 4, 4, 7, -4, 8],
+        [-8, -24, -4, -3, -3, -4, -24, -8],
+        [99, -8, 8, 6, 6, 8, -8, 99],
+    ]"""
+
+    SQUARE_WEIGHTS = [
+        99, -8, 8, 6, 6, 8, -8, 99,
+        -8, -24, -4, -3, -3, -4, -24, -8,
+        8, -4, 7, 4, 4, 7, -4, 8,
+        6, -3, 4, 0, 0, 4, -3, 6,
+        6, -3, 4, 0, 0, 4, -3, 6,
+        8, -4, 7, 4, 4, 7, -4, 8,
+        -8, -24, -4, -3, -3, -4, -24, -8,
+        99, -8, 8, 6, 6, 8, -8, 99
+        ]
 
     def __init__(self, my_color, opponent_color):
         self.name = 'izotomas'
         self.my_color = my_color
         self.opponent_color = opponent_color
+        self.start_time = 0
 
     def move(self, board):
-        board_size = len(board)
-        possible = []
-        for x in range(board_size):
-            for y in range(board_size):
-                if (board[x][y] == -1) and self.__is_correct_move([x, y], board, board_size):
-                    possible.append((x, y))
-
-        possible_moves = len(possible) - 1
-        if possible_moves < 0:
-            print('No possible move!')
+        # test
+        board1d = reversiutils.flatten(board)
+        # test end
+        root = Node(board1d, self.my_color, self.opponent_color)
+        self.start_time = time.time()
+        root.children = root.get_children()
+        if not root.children:
             return None
-        my_move = 0
-        return possible[my_move]
+        best_move = self.__alpha_beta_search(root)
+        return best_move
 
-    def __is_correct_move(self, move, board, board_size):
-        dx = [-1, -1, -1, 0, 1, 1, 1, 0]
-        dy = [-1, 0, 1, 1, 1, 0, -1, -1]
-        for i in range(len(dx)):
-            if self.__confirm_direction(move, dx[i], dy[i], board, board_size):
-                return True
-        return False
+    # region Helpers
 
-    def __confirm_direction(self, move, dx, dy, board, board_size):
-        posx = move[0]+dx
-        posy = move[1]+dy
-        if (posx >= 0) and (posx < board_size) and (posy >= 0) and (posy < board_size):
-            if board[posx][posy] == self.opponent_color:
-                while (posx >= 0) and (posx <= (board_size-1)) and (posy >= 0) and (posy <= (board_size-1)):
-                    posx += dx
-                    posy += dy
-                    if (posx >= 0) and (posx < board_size) and (posy >= 0) and (posy < board_size):
-                        if board[posx][posy] == -1:
-                            return False
-                        if board[posx][posy] == self.my_color:
-                            return True
+    def __alpha_beta_search(self, node):
+        self.__max_value(node, Node.DEFAULT_SCORE, Node.DEFAULT_SCORE * (-1))
+        best_node = max(node.children)
+        coordinates = reversiutils.index_to_cartesian(node.children[0].move)
+        return coordinates
 
-        return False
+    def __max_value(self, node, alpha, beta):
+        if self.__is_terminal_state(node):
+            return self.__utility(node)
+        node.children = node.get_children()
+        for child in node.children:
+            node.score = max(node.score, self.__min_value(child, alpha, beta))
+            if node.score >= beta:
+                return node.score
+            alpha = max(alpha, node.score)
+        return node.score
 
-    def get_all_valid_moves(self, board):
-        board_size = len(board)
-        valid_moves = []
-        for x in range(board_size):
-            for y in range(board_size):
-                if (board[x][y] == -1) and self.__is_correct_move([x, y], board, board_size):
-                    valid_moves.append((x, y))
+    def __min_value(self, node, alpha, beta):
+        if self.__is_terminal_state(node):
+            return self.__utility(node)
+        node.children = node.get_children()
+        for child in node.children:
+            node.score = min(node.score, self.__max_value(child, alpha, beta))
+            if node.score <= alpha:
+                return node.score
+            beta = min(beta, node.score)
+        return node.score
 
-        if len(valid_moves) <= 0:
-            print('No possible move!')
-            return None
-        return valid_moves
+    def __utility(self, node):
+        state = node.state
+        is_max = node.is_max_node
+        my_col = node.my_color
+        opp_col = node.opponent_color
+
+        s = reversiutils.square_weights(state, MyPlayer.SQUARE_WEIGHTS, is_max, my_col, opp_col)
+        # m = reversiutils.mobility(state, is_max, my_col, opp_col)
+        return s  # + m
+
+    def __is_terminal_state(self, node):
+        move_time = (time.time() - self.start_time)
+        max_depth_reached = node.depth == 0
+        time_expired = move_time > MyPlayer.MAX_WAITING_TIME
+        no_children = not node.children
+        return max_depth_reached or no_children
+        # return node.depth == 0 or move_time > MyPlayer.MAX_WAITING_TIME or not node.children
+
+    # endregion

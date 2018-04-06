@@ -2,6 +2,7 @@ import getopt
 import sys
 import time
 import random_player
+import player
 from game_board import GameBoard
 
 
@@ -115,24 +116,24 @@ class HeadlessReversiCreator(object):
 
 if __name__ == "__main__":
     (choices, args) = getopt.getopt(sys.argv[1:], "")
-    p1_color = 0
-    p2_color = 1
+    p0_color = 0
+    p1_color = 1
 
     if len(args) == 0:
-        print('No arguments given.\nRunning game with two random players.')
-        p1 = random_player.MyPlayer(p1_color, p2_color)
-        p2 = random_player.MyPlayer(p2_color, p1_color)
-        game = HeadlessReversiCreator(p1, p1_color, p2, p2_color, 8)
+        print('No arguments given.\nRunning game with my player against a random player.')
+        p0 = random_player.MyPlayer(p0_color, p1_color)
+        p1 = player.MyPlayer(p1_color, p0_color)
+        game = HeadlessReversiCreator(p0, p0_color, p1, p1_color, 8)
         game.play_game()
 
     elif len(args) == 1:
         print('One player given in argument.\nRunning game with given player against the random player.')
-        p1 = random_player.MyPlayer(p1_color, p2_color)
+        p0 = random_player.MyPlayer(p0_color, p1_color)
         try:
             player_module = __import__(args[0])
-            p2 = player_module.MyPlayer(p2_color, p1_color)
+            p1 = player_module.MyPlayer(p1_color, p0_color)
 
-            game = HeadlessReversiCreator(p1, p1_color, p2, p2_color, 8)
+            game = HeadlessReversiCreator(p0, p0_color, p1, p1_color, 8)
             game.play_game()
 
         except ImportError:
@@ -145,19 +146,19 @@ if __name__ == "__main__":
         importsCorrect = True
         try:
             player_module = __import__(args[0])
-            p1 = player_module.MyPlayer(p1_color, p2_color)
+            p0 = player_module.MyPlayer(p0_color, p1_color)
         except ImportError:
             importsCorrect = False
             print('Error: Cannot import given player: %s.' %(args[0]))
 
         try:
             player_module = __import__(args[1])
-            p2 = player_module.MyPlayer(p2_color, p1_color)
+            p1 = player_module.MyPlayer(p1_color, p0_color)
         except ImportError:
             importsCorrect = False
             print('Error: Cannot import given player: %s.' %(args[1]))
 
         if importsCorrect:
-            game = HeadlessReversiCreator(p1, p1_color, p2, p2_color, 8)
+            game = HeadlessReversiCreator(p0, p0_color, p1, p1_color, 8)
             game.play_game()
 
