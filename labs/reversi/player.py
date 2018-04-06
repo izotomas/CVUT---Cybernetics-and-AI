@@ -1,36 +1,24 @@
 from node import Node
-import reversiutils
+import reversiutils as ru
 import time
 
 
 class MyPlayer(object):
     """
-    Uses alfa-beta pruning, and heuristic function based on sum of field evaluation if tree lookup takes longer than
-    max allowed waiting time
+    Uses MiniMax with alpha-beta pruning for the first 0.5 sec heuristic evaluation afterwards
     """
 
-    MAX_WAITING_TIME = 0.85
-    # heuristics weights
-    """SQUARE_WEIGHTS = [
-        [99, -8, 8, 6, 6, 8, -8, 99],
-        [-8, -24, -4, -3, -3, -4, -24, -8],
-        [8, -4, 7, 4, 4, 7, -4, 8],
-        [6, -3, 4, 0, 0, 4, -3, 6],
-        [6, -3, 4, 0, 0, 4, -3, 6],
-        [8, -4, 7, 4, 4, 7, -4, 8],
-        [-8, -24, -4, -3, -3, -4, -24, -8],
-        [99, -8, 8, 6, 6, 8, -8, 99],
-    ]"""
-
+    MAX_WAITING_TIME = 0.5
+    # weights for heuristic evaluation
     SQUARE_WEIGHTS = [
-        99, -8, 8, 6, 6, 8, -8, 99,
-        -8, -24, -4, -3, -3, -4, -24, -8,
-        8, -4, 7, 4, 4, 7, -4, 8,
-        6, -3, 4, 0, 0, 4, -3, 6,
-        6, -3, 4, 0, 0, 4, -3, 6,
-        8, -4, 7, 4, 4, 7, -4, 8,
-        -8, -24, -4, -3, -3, -4, -24, -8,
-        99, -8, 8, 6, 6, 8, -8, 99
+         200, -100, 100,  50,  50, 100, -100,  200,
+        -100, -200, -50, -50, -50, -50, -200, -100,
+         100,  -50, 100,   0,   0, 100,  -50,  100,
+          50,  -50,   0,   0,   0,   0,  -50,   50,
+          50,  -50,   0,   0,   0,   0,  -50,   50,
+         100,  -50, 100,   0,   0, 100,  -50,  100,
+        -100, -200, -50, -50, -50, -50, -200, -100,
+         200, -100, 100,  50,  50, 100, -100,  200,
         ]
 
     def __init__(self, my_color, opponent_color):
@@ -40,9 +28,7 @@ class MyPlayer(object):
         self.start_time = 0
 
     def move(self, board):
-        # test
-        board1d = reversiutils.flatten(board)
-        # test end
+        board1d = ru.flatten(board)
         root = Node(board1d, self.my_color, self.opponent_color)
         self.start_time = time.time()
         root.children = root.get_children()
@@ -56,13 +42,13 @@ class MyPlayer(object):
     def __alpha_beta_search(self, node):
         self.__max_value(node, Node.DEFAULT_SCORE, Node.DEFAULT_SCORE * (-1))
         best_node = max(node.children)
-        coordinates = reversiutils.index_to_cartesian(node.children[0].move)
+        coordinates = ru.index_to_cartesian(best_node.move)
         return coordinates
 
     def __max_value(self, node, alpha, beta):
-        if self.__is_terminal_state(node):
-            return self.__utility(node)
         node.children = node.get_children()
+        if self.__is_terminal_state(node):
+            return self.__evaluate(node)
         for child in node.children:
             node.score = max(node.score, self.__min_value(child, alpha, beta))
             if node.score >= beta:
@@ -71,9 +57,9 @@ class MyPlayer(object):
         return node.score
 
     def __min_value(self, node, alpha, beta):
-        if self.__is_terminal_state(node):
-            return self.__utility(node)
         node.children = node.get_children()
+        if self.__is_terminal_state(node):
+            return self.__evaluate(node)
         for child in node.children:
             node.score = min(node.score, self.__max_value(child, alpha, beta))
             if node.score <= alpha:
@@ -81,22 +67,32 @@ class MyPlayer(object):
             beta = min(beta, node.score)
         return node.score
 
-    def __utility(self, node):
-        state = node.state
-        is_max = node.is_max_node
-        my_col = node.my_color
-        opp_col = node.opponent_color
-
-        s = reversiutils.square_weights(state, MyPlayer.SQUARE_WEIGHTS, is_max, my_col, opp_col)
-        # m = reversiutils.mobility(state, is_max, my_col, opp_col)
-        return s  # + m
-
     def __is_terminal_state(self, node):
         move_time = (time.time() - self.start_time)
-        max_depth_reached = node.depth == 0
         time_expired = move_time > MyPlayer.MAX_WAITING_TIME
         no_children = not node.children
-        return max_depth_reached or no_children
-        # return node.depth == 0 or move_time > MyPlayer.MAX_WAITING_TIME or not node.children
+        return time_expired or no_children
+
+    @staticmethod
+    def __evaluate(node):
+        free_position_count = node.board.count(-1)
+        if not node.children or free_position_count == 0:
+            return ru.utility(node) * 10000
+
+        if free_position_count > 45:
+            return ru.mobility(node) + \
+                  4 * ru.positional_strength(node, MyPlayer.SQUARE_WEIGHTS) + \
+                  100 * ru.corners(node)
+
+        if free_position_count > 30:
+            return 10 * ru.parity(node) + \
+                   5 * ru.mobility(node) + \
+                   10 * ru.positional_strength(node, MyPlayer.SQUARE_WEIGHTS) + \
+                   100 * ru.corners(node)
+
+        else:
+            return 500 * ru.parity(node) + \
+                   1000 * ru.positional_strength(node, MyPlayer.SQUARE_WEIGHTS) + \
+                   1000 * ru.corners(node)
 
     # endregion

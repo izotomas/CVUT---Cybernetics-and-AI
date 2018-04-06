@@ -5,7 +5,7 @@ import copy
 
 def print_board(board):
     cutoff = 8
-    text = '1D from 2D:\n'
+    text = ''
     for i in range(len(board)):
         if board[i] == -1:
             text += ' -'
@@ -28,132 +28,13 @@ def get_all_valid_moves(board, player_color, opponent_color):
     return valid_moves
 
 
-def get_all_valid_moves2d(board, player_color, opponent_color):
-    board_size = len(board)
-    valid_moves = []
-    for x in range(board_size):
-        for y in range(board_size):
-            if (board[x][y] == -1) and __is_correct_move2d([x, y], board, board_size, player_color, opponent_color):
-                valid_moves.append((x, y))
-
-    return valid_moves
-
-
 def simulate_move(board, valid_move_vector, player_color):
-    board_copy = list(board)
+    board_copy = copy.deepcopy(board)
     if valid_move_vector:
         for field_id in valid_move_vector:
             board_copy[field_id] = player_color
 
     return board_copy
-
-
-
-
-
-# endregion
-
-# region Heuristics
-
-def parity(state, is_max, my_col, opp_col):
-    """
-    Disc count difference between the two players
-    :returns: 100 * (Max Player Coins - Min Player Coins ) / (Max Player Coins + Min Player Coins)
-    """
-    d1 = sum(row.count(my_col) for row in state)
-    d2 = sum(row.count(opp_col) for row in state)
-    return __get_ratio(is_max, d1, d2)
-
-
-def mobility(state, is_max, my_col, opp_col):
-    """
-    Relative difference between # of possible moves between the two players
-    :returns zero or 100 * (Max player moves - Min player moves) / (Max player moves + Min player moves)
-    """
-    m1 = len(get_all_valid_moves2d(state, my_col, opp_col))
-    m2 = len(get_all_valid_moves2d(state, opp_col, my_col))
-    if m1 + m2 != 0:
-        return __get_ratio(is_max, m1, m2)
-    else:
-        return 0
-
-
-def square_weights(state, field_values, is_max, my_col, opp_col):
-    f1 = 0
-    f2 = 0
-    for i in range(len(state)):
-        if state[i] == my_col:
-            f1 += field_values[i]
-        elif state[i] == opp_col:
-            f2 += field_values[i]
-    if f1 + f2 != 0:
-        return __get_ratio(is_max, f1, f2)
-    return 0
-
-
-def square_weights2d(state, field_values, is_max, my_col, opp_col):
-    """
-    Ratio of all square weights between the two players
-    :returns zero or 100 * (Max Player pts - Min Player pts) / (Max Player pts + Min Player pts)
-    """
-    f1 = 1
-    f2 = 1
-    for i in range(8):
-        for j in range(8):
-            if state[i][j] == my_col:
-                f1 += field_values[i][j]
-
-            elif state[i][j] == opp_col:
-                f2 += field_values[i][j]
-
-    if f1 + f2 != 0:
-        return __get_ratio(is_max, f1, f2)
-    return 0
-
-
-def corners(state, is_max, my_col, opp_col):
-    """
-    Corners are valuable as they can't be captured
-    :returns zero or 100 * (Max player corner count - Min player corner count) / (Max player corner count + Min player corner count)
-    """
-    corner_elements = [state[0][0], state[7][0], state[0][7], state[7][7]]
-    c1 = len([x for x in corner_elements if x == my_col])
-    c2 = len([x for x in corner_elements if x == opp_col])
-    if c1 + c2 != 0:
-        return __get_ratio(is_max, c1, c2)
-    return 0
-
-
-def edges(state, is_max, my_col, opp_col):
-    """
-    Edges can't be captured too
-    :returns 100 * (Max player edge count - Min player edge count) / (Max player edge count + Min player edge count)
-    """
-    edge_elements = state[0][1:7] + \
-                    state[1][0::7] + \
-                    state[2][0::7] + \
-                    state[3][0::7] + \
-                    state[4][0::7] + \
-                    state[5][0::7] + \
-                    state[6][0::7] + \
-                    state[7][1:7]
-    e1 = len([x for x in edge_elements if x == my_col])
-    e2 = len([x for x in edge_elements if x == opp_col])
-    if e1 + e2 != 0:
-        return __get_ratio(is_max, e1, e2)
-    return 0
-
-
-def __get_ratio(is_max, a, b):
-    if is_max:
-        return 100 * (a - b) / (a + b)
-    else:
-        return 100 * (b - a) / (a + b)
-
-
-# endregion
-
-# region Helpers
 
 
 def flatten(board):
@@ -174,6 +55,72 @@ def cartesian_to_index(coordinates):
     return index
 
 
+# endregion
+
+# region Heuristics
+
+
+def utility(node):
+    return parity(node)
+
+
+def parity(node):
+    """
+    Disc count difference between the two players
+    :returns: 100 * (Max Player Coins - Min Player Coins ) / (Max Player Coins + Min Player Coins)
+    """
+    d1 = node.board.count(node.my_color)
+    d2 = node.board.count(node.opponent_color)
+    return __get_ratio(node.is_max_node, d1, d2)
+
+
+def mobility(node):
+    """
+    Relative difference between # of possible moves between the two players
+    :returns zero or 100 * (Max player moves - Min player moves) / (Max player moves + Min player moves)
+    """
+    m1 = len(get_all_valid_moves(node.board, node.my_color, node.opponent_color))
+    m2 = len(get_all_valid_moves(node.board, node.opponent_color, node.my_color))
+    return __get_ratio(node.is_max_node, m1, m2)
+
+
+def positional_strength(node, positional_heuristics):
+
+    s1 = 0
+    s2 = 0
+    for i in range(len(node.board)):
+        if node.board[i] == node.my_color:
+            s1 += positional_heuristics[i]
+        elif node.board[i] == node.opponent_color:
+            s2 += positional_heuristics[i]
+    return __get_ratio(node.is_max_node, s1, s2)
+
+
+def corners(node):
+    """
+    Corners are valuable as they can't be captured
+    :returns zero or 100 * (Max player corner count - Min player corner count) / (Max player corner count + Min player corner count)
+    """
+    corner_elements = [node.board[0], node.board[7], node.board[56], node.board[63]]
+    c1 = corner_elements.count(node.my_color)
+    c2 = corner_elements.count(node.opponent_color)
+    return __get_ratio(node.is_max_node, c1, c2)
+
+
+def __get_ratio(is_max, a, b):
+    if a + b == 0:
+        return 0
+    if is_max:
+        return 100 * (a - b) / (a + b)
+    else:
+        return 100 * (b - a) / (a + b)
+
+
+# endregion
+
+# region Helpers
+
+
 def __get_move_vector(move, board, player_color, opponent_color):
     # is field free
     if board[move] != -1:
@@ -184,27 +131,6 @@ def __get_move_vector(move, board, player_color, opponent_color):
         if fields:
             return fields
     return []
-
-
-def __is_correct_move2d(move, board, board_size, player_color, opponent_color):
-    dx = [-1, -1, -1, 0, 1, 1, 1, 0]
-    dy = [-1, 0, 1, 1, 1, 0, -1, -1]
-    for i in range(len(dx)):
-        if __confirm_direction2d(move, dx[i], dy[i], board, board_size, player_color, opponent_color):
-            return True
-    return False
-
-
-def simulate_move2d(board, move, player_color, opponent_color):
-    board_copy = copy.deepcopy(board)
-    board_size = len(board)
-    board_copy[move[0]][move[1]] = player_color
-    dx = [-1, -1, -1, 0, 1, 1, 1, 0]
-    dy = [-1, 0, 1, 1, 1, 0, -1, -1]
-    for i in range(len(dx)-7):
-        if __confirm_direction2d(move, dx[i], dy[i], board_copy, board_size, player_color, opponent_color):
-            __change_stones_in_direction(move, dx[i], dy[i], board_copy, player_color)
-    return board_copy
 
 
 def __change_stones_in_direction(move, dx, dy, board, players_color):
@@ -252,23 +178,6 @@ def __is_search_in_bounds(position, direction, board_len):
             return position % 8 != 7
         if direction in (-8, 8):
             return True
-    return False
-
-
-def __confirm_direction2d(move, dx, dy, board, board_size, player_color, opponent_color):
-    posx = move[0] + dx
-    posy = move[1] + dy
-    if (posx >= 0) and (posx < board_size) and (posy >= 0) and (posy < board_size):
-        if board[posx][posy] == opponent_color:
-            while (posx >= 0) and (posx <= (board_size - 1)) and (posy >= 0) and (posy <= (board_size - 1)):
-                posx += dx
-                posy += dy
-                if (posx >= 0) and (posx < board_size) and (posy >= 0) and (posy < board_size):
-                    if board[posx][posy] == -1:
-                        return False
-                    if board[posx][posy] == player_color:
-                        return True
-
     return False
 
 # endregion
