@@ -1,0 +1,35 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+GRAD	mdp_sandbox.py	/^GRAD = (0, 0)$/;"	v
+GRID_WORLD3	mdp_sandbox.py	/^GRID_WORLD3 = [[[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 0, 0]],$/;"	v
+GRID_WORLD3_REWARDS	mdp_sandbox.py	/^GRID_WORLD3_REWARDS = [[REWARD_NORMAL_STATE, REWARD_NORMAL_STATE, REWARD_NORMAL_STATE, REWARD_GOAL_STATE],$/;"	v
+GRID_WORLD4	mdp_sandbox.py	/^GRID_WORLD4 = [[[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 0, 0]],$/;"	v
+MAP	mdp_sandbox.py	/^MAP = 'maps\/easy\/easy1.bmp'$/;"	v
+MAP	mdp_sandbox.py	/^MAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), MAP)$/;"	v
+PROBS	mdp_sandbox.py	/^PROBS = [0.4, 0.3, 0.3, 0]$/;"	v
+REWARD_DANGEROUS_STATE	mdp_sandbox.py	/^REWARD_DANGEROUS_STATE = -1$/;"	v
+REWARD_GOAL_STATE	mdp_sandbox.py	/^REWARD_GOAL_STATE = 1$/;"	v
+REWARD_NORMAL_STATE	mdp_sandbox.py	/^REWARD_NORMAL_STATE = -0.04$/;"	v
+SAVE_EPS	mdp_sandbox.py	/^SAVE_EPS = False$/;"	v
+SKIP	mdp_sandbox.py	/^SKIP = False$/;"	v
+env	mdp_sandbox.py	/^    env = kuimaze.MDPMaze(map_image=GRID_WORLD3, probs=PROBS, grad=GRAD, node_rewards=GRID_WORLD3_REWARDS)$/;"	v
+find_policy_via_policy_iteration	mdp_sandbox.py	/^def find_policy_via_policy_iteration(problem, discount_factor):$/;"	f
+find_policy_via_value_iteration	mdp_sandbox.py	/^def find_policy_via_value_iteration(problem, discount_factor, epsilon):$/;"	f
+get_visualisation_values	mdp_sandbox.py	/^def get_visualisation_values(dictionary):$/;"	f
+init_policy	mdp_sandbox.py	/^def init_policy(problem):$/;"	f
+init_utils	mdp_sandbox.py	/^def init_utils(problem):$/;"	f
+kuimaze	mdp_sandbox.py	/^import kuimaze$/;"	i
+msvcrt	mdp_sandbox.py	/^            import msvcrt$/;"	i
+os	mdp_sandbox.py	/^import os$/;"	i
+policy	mdp_sandbox.py	/^    policy = find_policy_via_policy_iteration(env, 0.9999)$/;"	v
+random	mdp_sandbox.py	/^import random$/;"	i
+sys	mdp_sandbox.py	/^import sys$/;"	i
+termios	mdp_sandbox.py	/^            import termios$/;"	i
+time	mdp_sandbox.py	/^import time$/;"	i
+utils	mdp_sandbox.py	/^    utils = init_utils(env)$/;"	v
+wait_key	mdp_sandbox.py	/^    def wait_key():$/;"	f	function:wait_n_or_s
+wait_n_or_s	mdp_sandbox.py	/^def wait_n_or_s():$/;"	f

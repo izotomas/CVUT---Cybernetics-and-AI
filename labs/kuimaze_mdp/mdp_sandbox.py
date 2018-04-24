@@ -6,6 +6,7 @@ import os
 import time
 import sys
 
+# region Config Items
 
 MAP = 'maps/easy/easy1.bmp'
 MAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), MAP)
@@ -13,7 +14,6 @@ PROBS = [0.4, 0.3, 0.3, 0]
 GRAD = (0, 0)
 SKIP = False
 SAVE_EPS = False
-
 
 GRID_WORLD4 = [[[255, 255, 255], [255, 255, 255], [255, 255, 255], [255, 0, 0]],
                [[255, 255, 255], [0, 0, 0], [255, 255, 255], [255, 255, 255]],
@@ -33,11 +33,18 @@ GRID_WORLD3_REWARDS = [[REWARD_NORMAL_STATE, REWARD_NORMAL_STATE, REWARD_NORMAL_
                        [REWARD_NORMAL_STATE, REWARD_NORMAL_STATE, REWARD_NORMAL_STATE, REWARD_NORMAL_STATE]]
 
 
+# endregion
+
+
 def wait_n_or_s():
+    """
+    press n - next, s - skip to end ... write into terminal
+    """
+
     def wait_key():
-        '''
+        """
         returns key pressed ... works only in terminal! NOT in IDE!
-        '''
+        """
         result = None
         if os.name == 'nt':
             import msvcrt
@@ -58,9 +65,6 @@ def wait_n_or_s():
                 termios.tcsetattr(fd, termios.TCSAFLUSH, oldterm)
         return result
 
-    '''
-    press n - next, s - skip to end ... write into terminal
-    '''
     global SKIP
     x = SKIP
     while not x:
@@ -71,18 +75,16 @@ def wait_n_or_s():
             break
 
 
-
-
-def get_visualisation_values(dictvalues):
-    if dictvalues is None:
+def get_visualisation_values(dictionary):
+    if dictionary is None:
         return None
     ret = []
-    for key, value in dictvalues.items():
+    for key, value in dictionary.items():
         # ret.append({'x': key[0], 'y': key[1], 'value': [value, value, value, value]})
         ret.append({'x': key[0], 'y': key[1], 'value': value})
     return ret
 
-# the init functions are provided for your convenience, modify, use ...
+
 def init_policy(problem):
     policy = dict()
     for state in problem.get_all_states():
@@ -93,28 +95,35 @@ def init_policy(problem):
         policy[state.x, state.y] = random.choice(actions)
     return policy
 
+
 def init_utils(problem):
-    '''
+    """
     Initialize all state utilities to zero except the goal states
     :param problem: problem - object, for us it will be kuimaze.Maze object
     :return: dictionary of utilities, indexed by state coordinates
-    '''
+    """
     utils = dict()
     x_dims = problem.observation_space.spaces[0].n
     y_dims = problem.observation_space.spaces[1].n
 
     for x in range(x_dims):
         for y in range(y_dims):
-            utils[(x,y)] = 0
+            utils[(x, y)] = 0
 
     for state in problem.get_all_states():
-        utils[(state.x, state.y)] = state.reward # problem.get_state_reward(state)
+        utils[(state.x, state.y)] = state.reward  # problem.get_state_reward(state)
     return utils
 
 
-def find_policy_via_policy_iteration(problem,discount_factor):
+def find_policy_via_policy_iteration(problem, discount_factor):
     policy = init_policy(problem)
-    return(policy)
+    return policy
+
+
+def find_policy_via_value_iteration(problem, discount_factor, epsilon):
+    policy = init_policy(problem)
+    return policy
+
 
 if __name__ == "__main__":
     # Initialize the maze environment
@@ -131,7 +140,7 @@ if __name__ == "__main__":
 
     print(env.get_all_states())
     # policy1 = find_policy_via_value_iteration(env)
-    policy = find_policy_via_policy_iteration(env,0.9999)
+    policy = find_policy_via_policy_iteration(env, 0.9999)
     env.visualise(get_visualisation_values(policy))
     env.render()
     wait_n_or_s()
