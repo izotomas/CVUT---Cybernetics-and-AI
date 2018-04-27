@@ -5,6 +5,7 @@ import random
 import os
 import time
 import sys
+import mdp_agent
 
 # region Config Items
 
@@ -116,7 +117,10 @@ def init_utils(problem):
 
 
 def find_policy_via_policy_iteration(problem, discount_factor):
-    policy = init_policy(problem)
+    pi = init_policy(problem)   # random action in all states
+    v = init_utils(problem)     # 0 in all values
+    unchanged = True
+
     return policy
 
 
@@ -138,14 +142,23 @@ if __name__ == "__main__":
     print('press s - skip to end')
     print('====================')
 
-    print(env.get_all_states())
-    # policy1 = find_policy_via_value_iteration(env)
-    policy = find_policy_via_policy_iteration(env, 0.9999)
+    # agent = mdp_agent.MDP_agent(env)
+    policy = mdp_agent.find_policy_via_policy_iteration(env, 0.1)
     env.visualise(get_visualisation_values(policy))
     env.render()
-    wait_n_or_s()
+    print('Policy:', policy)
+    time.sleep(10)
+    """"
+    print(env.get_all_states())
+    # policy1 = find_policy_via_value_iteration(env)
+    policy = mdp_agent.find_policy_via_value_iteration(env, 0.1, 0.01)
+    env.visualise(get_visualisation_values(policy))
+    env.render()
+    #wait_n_or_s()
     print('Policy:', policy)
     utils = init_utils(env)
     env.visualise(get_visualisation_values(utils))
     env.render()
     time.sleep(5)
+    """""
+
