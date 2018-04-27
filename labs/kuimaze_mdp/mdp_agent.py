@@ -43,7 +43,7 @@ def __find_policy_via_policy_iteration(env, gamma):
         for s in agent.states:
             if env.is_goal_state(s):
                 continue
-            action = __argmax(agent.get_actions(s), lambda a: __expected_utility(a, s, utility, agent))
+            action = __optimal_action(agent.get_actions(s), lambda a: __expected_utility(a, s, utility, agent))
             if action != policy[(s.x, s.y)]:
                 policy[(s.x, s.y)] = action
                 unchanged = False
@@ -69,23 +69,18 @@ def __expected_utility(a, s, U, agent):
     "The expected utility of doing a in state s, according to the MDP and U."
     return sum([p * U[(s1.x, s1.y)] for (s1, p) in agent.get_transition(s, a)])
 
-def __argmax(seq, fn):
-    """Return an element with highest fn(seq[i]) score; tie goes to first one.
-    """
-    return __argmin(seq, lambda x: -fn(x))
 
-
-def __argmin(seq, fn):
+def __optimal_action(actions, fn):
     """
     Return an element with lowest fn(seq[i]) score; tie goes to first one.
     """
-    best = seq[0];
-    best_score = fn(best)
-    for x in seq:
-        x_score = fn(x)
-        if x_score < best_score:
-            best, best_score = x, x_score
-    return best
+    optimal = actions[0];
+    optimal_score = fn(optimal)
+    for action in actions:
+        x_score = fn(action)
+        if x_score > optimal_score:
+            optimal, optimal_score = action, x_score
+    return optimal
 
 
 # region Value Iteration private functions
