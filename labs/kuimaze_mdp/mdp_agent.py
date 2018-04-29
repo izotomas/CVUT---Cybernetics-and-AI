@@ -1,3 +1,4 @@
+import operator
 import random
 import copy
 
@@ -33,93 +34,58 @@ class MDP_agent:
         return self.__actions[state]
 
 
-def __find_policy_via_policy_iteration(env, gamma):
-    agent = MDP_agent(env)
-    utility = __init_utility(env)
-    policy = __init_policy(env)
-    while True:
-        utility = __policy_evaluation(policy, utility, gamma, agent, env.is_goal_state)
-        unchanged = True
-        for s in agent.states:
-            if env.is_goal_state(s):
-                continue
-            action = __optimal_action(agent.get_actions(s), lambda a: __expected_utility(a, s, utility, agent))
-            if action != policy[(s.x, s.y)]:
-                policy[(s.x, s.y)] = action
-                unchanged = False
-        if unchanged:
-            return policy
-
-
 def find_policy_via_policy_iteration(env, discount_factor):
-    return __find_policy_via_policy_iteration(env, discount_factor)
-
-
-def __policy_evaluation(policy, utility, gamma, agent, fn_goal_check, k=20):
-    for i in range(k):
-        for s in agent.states:
-            if fn_goal_check(s):
-                continue
-            utility[(s.x, s.y)] = s.reward + gamma * sum([p * utility[(s.x, s.y)]
-                                                          for (s1, p) in agent.get_transition(s, policy[(s.x, s.y)])])
-    return utility
-
-
-def __expected_utility(a, s, U, agent):
-    "The expected utility of doing a in state s, according to the MDP and U."
-    return sum([p * U[(s1.x, s1.y)] for (s1, p) in agent.get_transition(s, a)])
-
-
-def __optimal_action(actions, fn):
-    """
-    Return an element with lowest fn(seq[i]) score; tie goes to first one.
-    """
-    optimal = actions[0];
-    optimal_score = fn(optimal)
-    for action in actions:
-        x_score = fn(action)
-        if x_score > optimal_score:
-            optimal, optimal_score = action, x_score
-    return optimal
+    None
 
 
 # region Value Iteration private functions
 
-def value_iteration(env, agent, gamma, epsilon):
-    """
-    :param env: kuimaze.MDPMaze object
-    :param agent: Mdp_agent object
-    :param gamma: discount factor
-    :param epsilon:
-    :return: converged utility dictionary (k => (x, y), val => utility)
-    """
-    u1 = __init_utility(env)
-    states = agent.states
-    transit = agent.get_transition
-    actions = agent.get_actions
-    threshold = epsilon * (1 - gamma) / gamma
-
+def find_policy_via_value_iteration(problem, discount_factor, epsilon):
+    policy = {}
+    optimal_utility = __init_utility(problem)
+    agent = MDP_agent(problem)
     while True:
-        u = copy.deepcopy(u1)
         delta = 0
-        for s in states:
-            if env.is_goal_state(s):
-                continue  # skip goal node utility computation
+        utility = copy.deepcopy(optimal_utility)
+        for s in agent.states:
+            if problem.is_goal_state(s):
+                continue
+            action, expected_util = __expected_utility(agent, s, utility)
+            optimal_utility[(s.x, s.y)] = s.reward + discount_factor * expected_util
+            policy[(s.x, s.y)] = action
+            delta = max(delta, abs(utility[(s.x, s.y)] - optimal_utility[s.x, s.y]))
+        if __has_converged(delta, discount_factor, epsilon):
+            return policy
 
-            # utility[s] = rewards(s) + gamma * max([sum([p * optimal_utility[s1] for (s1, p) in transit(s, a)])
-            #                                       for a in actions(s)])
-            # utility[(s.x, s.y)] = s.reward + gamma * max([__total_utility(optimal_utility, transit(s, a))
-            #                                              for a in actions(s)])
-            u1[(s.x, s.y)] = s.reward + gamma * max([__total_utility(u, transit(s, a))
-                                                     for a in actions(s)])
 
-            delta = max(delta, abs(u[(s.x, s.y)] - u1[(s.x, s.y)]))
-        if delta < threshold:
-            return u1
+def expected_utility(agent, state, utility):
+    actions = agent.get_actions(state)
+    expected_utils = list()
+    for a in actions:
+        t_util = 0
+        for s, prob in agent.get_transition(state, a):
+            t_util += prob * utility[(s.x, s.y)]
+        expected_utils.append((a, t_util))
+    return max(expected_utils, key=operator.itemgetter(1))
+
+
+def __expected_utility(agent, state, utility):
+    actions = agent.get_actions(state)
+    expected_utils = list()
+    for a in actions:
+        t_util = 0
+        for s, prob in agent.get_transition(state, a):
+            t_util += prob * utility[(s.x, s.y)]
+        expected_utils.append((a, t_util))
+    return max(expected_utils, key=operator.itemgetter(1))
 
 
 def __total_utility(utility, transitions):
     return sum([probability * utility[state] for (state, probability) in transitions])
+
+# endregion
+
+# region Helpers for both
 
 
 def __has_converged(delta, gamma, epsilon):
@@ -132,11 +98,6 @@ def __has_converged(delta, gamma, epsilon):
     """
 
     return delta < (epsilon * ((1 - gamma) / gamma))
-
-
-# endregion
-
-# region Helpers for both
 
 
 def __get_visualisation_values(dictionary):

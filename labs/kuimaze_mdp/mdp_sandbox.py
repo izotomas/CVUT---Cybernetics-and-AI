@@ -9,7 +9,7 @@ import mdp_agent
 
 # region Config Items
 
-MAP = 'maps/easy/easy1.bmp'
+MAP = 'maps/easy/easy2.bmp'
 MAP = os.path.join(os.path.dirname(os.path.abspath(__file__)), MAP)
 PROBS = [0.4, 0.3, 0.3, 0]
 GRAD = (0, 0)
@@ -131,9 +131,9 @@ def find_policy_via_value_iteration(problem, discount_factor, epsilon):
 
 if __name__ == "__main__":
     # Initialize the maze environment
-    env = kuimaze.MDPMaze(map_image=GRID_WORLD3, probs=PROBS, grad=GRAD, node_rewards=GRID_WORLD3_REWARDS)
+    # env = kuimaze.MDPMaze(map_image=GRID_WORLD4, probs=PROBS, grad=GRAD, node_rewards=GRID_WORLD3_REWARDS)
     # env = kuimaze.MDPMaze(map_image=GRID_WORLD3, probs=PROBS, grad=GRAD, node_rewards=None)
-    # env = kuimaze.MDPMaze(map_image=MAP, probs=PROBS, grad=GRAD, node_rewards=None)
+    env = kuimaze.MDPMaze(map_image=MAP, probs=PROBS, grad=GRAD, node_rewards=None)
     env.reset()
 
     print('====================')
@@ -143,7 +143,8 @@ if __name__ == "__main__":
     print('====================')
 
     # agent = mdp_agent.MDP_agent(env)
-    policy = mdp_agent.find_policy_via_policy_iteration(env, 0.1)
+    # policy = mdp_agent.find_policy_via_policy_iteration(env, 0.1)
+    policy = mdp_agent.find_policy_via_value_iteration(env, 0.5, 0.0001)
     env.visualise(get_visualisation_values(policy))
     env.render()
     print('Policy:', policy)
