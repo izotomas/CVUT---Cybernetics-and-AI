@@ -3,24 +3,23 @@ import random
 import copy
 
 
-class MDP_agent:
-
+class __MDP_agent:
+    """
+    Private class for easier communication with provided API
+    """
     def __init__(self, env):
-        self.__states = dict(((s.x, s.y), s) for s in env.get_all_states())
+        self.states = env.get_all_states()
         self.__transitions = {}
         self.__actions = {}
-        for s in self.__states.values():
+        for s in self.states:
             self.__actions[s] = list(env.get_actions(s))
             for a in self.__actions[s]:
                 self.__transitions[s, a] = [(s, p) for (s, p) in env.get_next_states_and_probs(s, a)]
 
-    @property
-    def states(self):
-        return list(self.__states.values())
-
     def get_transition(self, state, action):
         """
-        :param state: tuple with cartesian coordinates (x, y)
+        Getter for transition model defined by given state and action attempt
+        :param state: State object
         :param action: enum Action
         :return: list of probable outcomes for given trial [(state1, prob1), ...,(state_n, prob_n)]
         """
@@ -28,64 +27,52 @@ class MDP_agent:
 
     def get_actions(self, state):
         """
-        :param state: tuple with cartesian coordinates (x, y)
-        :return: list of enum Actions
+        Getter for possible action in a given state
+        :param state: State object
+        :return: list of enum Actions for given state
         """
         return self.__actions[state]
 
+    def get_expected_utility(self, state, utility):
+        """
+        Getter for optimal action and utility from a given state
+        :param state: State object
+        :param utility: list of utilities for all states in a problem scope
+        :return: tuple with optimal action and its utility (action, utility)
+        """
+        actions = self.__actions[state]
+        expected_utils = list()
+        for action in actions:
+            t_util = sum([prob * utility[(s.x, s.y)] for (s, prob) in self.__transitions[(state, action)]])
+            expected_utils.append((action, t_util))
+        return max(expected_utils, key=operator.itemgetter(1))
 
-def find_policy_via_policy_iteration(env, discount_factor):
+
+# region Policy Iteration
+
+def find_policy_via_policy_iteration(problem, discount_factor):
     None
+    
+# endregion
 
 
-# region Value Iteration private functions
+# region Value Iteration
 
 def find_policy_via_value_iteration(problem, discount_factor, epsilon):
-    policy = {}
+    agent = __MDP_agent(problem)
+    states = [s for s in agent.states if not problem.is_goal_state(s)]
     optimal_utility = __init_utility(problem)
-    agent = MDP_agent(problem)
+    policy = {}
     while True:
         delta = 0
         utility = copy.deepcopy(optimal_utility)
-        for s in agent.states:
-            if problem.is_goal_state(s):
-                continue
-            action, expected_util = __expected_utility(agent, s, utility)
-            optimal_utility[(s.x, s.y)] = s.reward + discount_factor * expected_util
-            policy[(s.x, s.y)] = action
-            delta = max(delta, abs(utility[(s.x, s.y)] - optimal_utility[s.x, s.y]))
+        for state in states:
+            action, expected_util = agent.get_expected_utility(state, utility)
+            optimal_utility[(state.x, state.y)] = state.reward + discount_factor * expected_util
+            policy[(state.x, state.y)] = action
+            delta = max(delta, abs(utility[(state.x, state.y)] - optimal_utility[state.x, state.y]))
         if __has_converged(delta, discount_factor, epsilon):
             return policy
-
-
-def expected_utility(agent, state, utility):
-    actions = agent.get_actions(state)
-    expected_utils = list()
-    for a in actions:
-        t_util = 0
-        for s, prob in agent.get_transition(state, a):
-            t_util += prob * utility[(s.x, s.y)]
-        expected_utils.append((a, t_util))
-    return max(expected_utils, key=operator.itemgetter(1))
-
-
-def __expected_utility(agent, state, utility):
-    actions = agent.get_actions(state)
-    expected_utils = list()
-    for a in actions:
-        t_util = 0
-        for s, prob in agent.get_transition(state, a):
-            t_util += prob * utility[(s.x, s.y)]
-        expected_utils.append((a, t_util))
-    return max(expected_utils, key=operator.itemgetter(1))
-
-
-def __total_utility(utility, transitions):
-    return sum([probability * utility[state] for (state, probability) in transitions])
-
-# endregion
-
-# region Helpers for both
 
 
 def __has_converged(delta, gamma, epsilon):
@@ -98,6 +85,10 @@ def __has_converged(delta, gamma, epsilon):
     """
 
     return delta < (epsilon * ((1 - gamma) / gamma))
+
+# endregion
+
+# region Helpers
 
 
 def __get_visualisation_values(dictionary):
