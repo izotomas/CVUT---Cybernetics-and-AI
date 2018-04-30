@@ -16,6 +16,7 @@ def find_policy_via_policy_iteration(problem, discount_factor):
     return policy
 
 
+# region Helper private classes
 class __MDP_agent(ABC):
     """
     Private (abstract) class for easier communication with provided API
@@ -165,7 +166,7 @@ class __MDP_PI_agent(__MDP_agent):
         utility = self.utility
         policy = self.__policy
         while True:
-            utility = self.__evaluate_policy(policy, utility)
+            utility = self.__evaluate_policy(policy, utility, states)
             unchanged = True
             for state in states:
                 action, action_util = self.get_optimal_action(state, utility)
@@ -175,15 +176,16 @@ class __MDP_PI_agent(__MDP_agent):
             if unchanged:
                 return policy
 
-    def __evaluate_policy(self, policy, utility, steps=10):
+    def __evaluate_policy(self, policy, utility, states, steps=10):
         """
         :param policy: dictionary with key => cartesian coordinates (x,y) and value => Action enum
         :param utility: dictionary with key => cartesian coordinates (x,y) and value => numerical utility
+        :param states: list of non terminal State objects
         :param steps: number of utility re-evaluations before it is considered stabilized
         :return: updated utility dictionary
         """
         for i in range(steps):
-            for state in self.states:
+            for state in states:
                 x, y = state.x, state.y
                 utility[(x, y)] = state.reward + self.gamma * self.get_expected_utility(state, policy[(x, y)], utility)
         return utility
@@ -203,3 +205,4 @@ class __MDP_PI_agent(__MDP_agent):
             actions = [action for action in env.get_actions(state)]
             policy[state.x, state.y] = random.choice(actions)
         return policy
+# endregion
