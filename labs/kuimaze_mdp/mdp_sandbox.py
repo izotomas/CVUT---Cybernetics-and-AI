@@ -131,9 +131,9 @@ def find_policy_via_value_iteration(problem, discount_factor, epsilon):
 
 if __name__ == "__main__":
     # Initialize the maze environment
-    # env = kuimaze.MDPMaze(map_image=GRID_WORLD4, probs=PROBS, grad=GRAD, node_rewards=GRID_WORLD3_REWARDS)
+    env = kuimaze.MDPMaze(map_image=GRID_WORLD3, probs=PROBS, grad=GRAD, node_rewards=GRID_WORLD3_REWARDS)
     # env = kuimaze.MDPMaze(map_image=GRID_WORLD3, probs=PROBS, grad=GRAD, node_rewards=None)
-    env = kuimaze.MDPMaze(map_image=MAP, probs=PROBS, grad=GRAD, node_rewards=None)
+    # env = kuimaze.MDPMaze(map_image=MAP, probs=PROBS, grad=GRAD, node_rewards=None)
     env.reset()
 
     print('====================')
@@ -147,8 +147,13 @@ if __name__ == "__main__":
     policy = mdp_agent.find_policy_via_value_iteration(env, 0.5, 0.0001)
     env.visualise(get_visualisation_values(policy))
     env.render()
-    print('Policy:', policy)
-    time.sleep(10)
+    print('Policy IV:', policy)
+    time.sleep(5)
+    policy2 = mdp_agent.find_policy_via_policy_iteration(env, 0.5)
+    env.visualise(get_visualisation_values(policy2))
+    print('Policy PI:', policy2)
+    env.render()
+    time.sleep(5)
     """"
     print(env.get_all_states())
     # policy1 = find_policy_via_value_iteration(env)
